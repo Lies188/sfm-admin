@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Table, Button, Input, Select, Space, Modal, Form, message } from 'antd';
-import { SearchOutlined, SendOutlined } from '@ant-design/icons';
+import { Table, Button, Input, Select, Space, Modal, Form, message, Popconfirm } from 'antd';
+import { SearchOutlined, SendOutlined, DeleteOutlined } from '@ant-design/icons';
 import { smsService, type SmsContent, type SendSmsCommand } from '../services/sms';
 import dayjs from 'dayjs';
 
@@ -39,6 +39,20 @@ const Sms = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!phone) {
+      message.warning('请先输入手机号');
+      return;
+    }
+    try {
+      await smsService.delete(phone, slot);
+      message.success('删除成功');
+      setSmsList([]);
+    } catch {
+      message.error('删除失败');
+    }
+  };
+
   const columns = [
     { title: '发送方', dataIndex: 'reciPhone', key: 'reciPhone', width: 140 },
     { title: '内容', dataIndex: 'reciContent', key: 'reciContent', ellipsis: true },
@@ -60,7 +74,7 @@ const Sms = () => {
         </Button>
       </div>
 
-      <Space style={{ marginBottom: 16 }}>
+      <Space style={{ marginBottom: 16 }} wrap>
         <Input
           placeholder="手机号"
           value={phone}
@@ -72,6 +86,15 @@ const Sms = () => {
           <Select.Option value={1}>SIM2</Select.Option>
         </Select>
         <Button icon={<SearchOutlined />} onClick={handleSearch}>查询</Button>
+        <Popconfirm
+          title="确认删除"
+          description="将删除该手机号的所有短信记录"
+          onConfirm={handleDelete}
+          okText="确认"
+          cancelText="取消"
+        >
+          <Button danger icon={<DeleteOutlined />}>清空记录</Button>
+        </Popconfirm>
       </Space>
 
       <Table
