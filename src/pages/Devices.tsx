@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag, Button, message, Space, Modal } from 'antd';
+import { Table, Tag, Button, message, Space, Modal, List, Spin } from 'antd';
 import { ReloadOutlined, MessageOutlined } from '@ant-design/icons';
 import { deviceService, type DeviceStatus, type SlotInfo } from '../services/device';
 import { smsService, type SmsContent } from '../services/sms';
@@ -12,6 +12,13 @@ const Devices = () => {
   const [smsList, setSmsList] = useState<SmsContent[]>([]);
   const [smsLoading, setSmsLoading] = useState(false);
   const [currentPhone, setCurrentPhone] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -118,38 +125,51 @@ const Devices = () => {
         open={smsModalOpen}
         onCancel={() => setSmsModalOpen(false)}
         footer={null}
-        width={700}
+        width={isMobile ? '95%' : 700}
+        style={{ top: isMobile ? 10 : 100 }}
       >
-        <Table
-          columns={[
-            {
-              title: '发送方',
-              dataIndex: 'reciPhone',
-              key: 'reciPhone',
-              width: 120,
-            },
-            {
-              title: '内容',
-              dataIndex: 'reciContent',
-              key: 'reciContent',
-              render: (content: string) => (
-                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{content}</div>
-              ),
-            },
-            {
-              title: '时间',
-              dataIndex: 'timestamp',
-              key: 'timestamp',
-              width: 160,
-              render: (ts: number) => dayjs.unix(ts).format('MM-DD HH:mm:ss'),
-            },
-          ]}
-          dataSource={smsList}
-          rowKey={(r) => `${r.reciPhone}-${r.timestamp}`}
-          loading={smsLoading}
-          pagination={{ pageSize: 10 }}
-          size="small"
-        />
+        {smsLoading ? (
+          <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
+        ) : isMobile ? (
+          <List
+            dataSource={smsList}
+            pagination={{ pageSize: 10, size: 'small' }}
+            renderItem={(item) => (
+              <List.Item style={{ display: 'block', padding: '12px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#888' }}>
+                  <span>{item.reciPhone}</span>
+                  <span>{dayjs.unix(item.timestamp).format('MM-DD HH:mm')}</span>
+                </div>
+                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{item.reciContent}</div>
+              </List.Item>
+            )}
+          />
+        ) : (
+          <Table
+            columns={[
+              { title: '发送方', dataIndex: 'reciPhone', key: 'reciPhone', width: 120 },
+              {
+                title: '内容',
+                dataIndex: 'reciContent',
+                key: 'reciContent',
+                render: (content: string) => (
+                  <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{content}</div>
+                ),
+              },
+              {
+                title: '时间',
+                dataIndex: 'timestamp',
+                key: 'timestamp',
+                width: 140,
+                render: (ts: number) => dayjs.unix(ts).format('MM-DD HH:mm:ss'),
+              },
+            ]}
+            dataSource={smsList}
+            rowKey={(r) => `${r.reciPhone}-${r.timestamp}`}
+            pagination={{ pageSize: 10 }}
+            size="small"
+          />
+        )}
       </Modal>
     </div>
   );
