@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag, Button, message, Space } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Table, Tag, Button, message, Space, Modal } from 'antd';
+import { ReloadOutlined, MessageOutlined } from '@ant-design/icons';
 import { deviceService, type DeviceStatus, type SlotInfo } from '../services/device';
+import { smsService, type SmsContent } from '../services/sms';
 import dayjs from 'dayjs';
 
 const Devices = () => {
   const [devices, setDevices] = useState<DeviceStatus[]>([]);
   const [loading, setLoading] = useState(false);
+  const [smsModalOpen, setSmsModalOpen] = useState(false);
+  const [smsList, setSmsList] = useState<SmsContent[]>([]);
+  const [smsLoading, setSmsLoading] = useState(false);
+  const [currentPhone, setCurrentPhone] = useState('');
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -23,6 +28,20 @@ const Devices = () => {
   useEffect(() => {
     fetchDevices();
   }, []);
+
+  const handleViewSms = async (phone: string) => {
+    setCurrentPhone(phone);
+    setSmsModalOpen(true);
+    setSmsLoading(true);
+    try {
+      const res = await smsService.query(phone, 100);
+      setSmsList(res.data || []);
+    } catch {
+      message.error('获取短信失败');
+    } finally {
+      setSmsLoading(false);
+    }
+  };
 
   const columns = [
     { title: '手机号', dataIndex: 'phone', key: 'phone' },
@@ -65,6 +84,20 @@ const Devices = () => {
       key: 'lastSeen',
       render: (ts: number) => ts ? dayjs.unix(ts).format('YYYY-MM-DD HH:mm:ss') : '-',
     },
+    {
+      title: '操作',
+      key: 'action',
+      width: 100,
+      render: (_: unknown, record: DeviceStatus) => (
+        <Button
+          type="link"
+          icon={<MessageOutlined />}
+          onClick={() => handleViewSms(record.phone)}
+        >
+          短信
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -79,9 +112,48 @@ const Devices = () => {
         rowKey="phone"
         loading={loading}
         pagination={false}
-        scroll={{ x: 480 }}
+        scroll={{ x: 560 }}
         size="middle"
       />
+
+      <Modal
+        title={`短信记录 - ${currentPhone}`}
+        open={smsModalOpen}
+        onCancel={() => setSmsModalOpen(false)}
+        footer={null}
+        width={700}
+      >
+        <Table
+          columns={[
+            {
+              title: '发送方',
+              dataIndex: 'reciPhone',
+              key: 'reciPhone',
+              width: 120,
+            },
+            {
+              title: '内容',
+              dataIndex: 'reciContent',
+              key: 'reciContent',
+              render: (content: string) => (
+                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{content}</div>
+              ),
+            },
+            {
+              title: '时间',
+              dataIndex: 'timestamp',
+              key: 'timestamp',
+              width: 160,
+              render: (ts: number) => dayjs.unix(ts).format('MM-DD HH:mm:ss'),
+            },
+          ]}
+          dataSource={smsList}
+          rowKey={(r) => `${r.reciPhone}-${r.timestamp}`}
+          loading={smsLoading}
+          pagination={{ pageSize: 10 }}
+          size="small"
+        />
+      </Modal>
     </div>
   );
 };
