@@ -57,15 +57,20 @@ const Devices = () => {
       title: 'SIM卡槽',
       dataIndex: 'slots',
       key: 'slots',
-      width: 100,
+      width: 120,
       render: (slots: SlotInfo[] | undefined) => {
         if (!slots || slots.length === 0) return '-';
         return (
           <Space direction="vertical" size={2}>
             {slots.map((s) => (
-              <Tag key={s.slot} color={s.subId >= 0 ? 'blue' : 'default'} style={{ margin: 0 }}>
-                {s.subId >= 0 ? (s.carrier || `SIM${s.slot + 1}`) : `无卡`}
-              </Tag>
+              <span key={s.slot}>
+                <Tag color={s.subId >= 0 ? 'blue' : 'default'} style={{ margin: 0 }}>
+                  SIM{s.slot + 1}
+                </Tag>
+                <span style={{ marginLeft: 4, fontSize: 12 }}>
+                  {s.subId >= 0 ? (s.carrier || '未知') : '无卡'}
+                </span>
+              </span>
             ))}
           </Space>
         );
