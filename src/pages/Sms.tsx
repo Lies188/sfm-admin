@@ -73,7 +73,14 @@ const Sms = () => {
       ),
     },
     { title: '发送方', dataIndex: 'reciPhone', key: 'reciPhone', width: 130 },
-    { title: '内容', dataIndex: 'reciContent', key: 'reciContent', ellipsis: true },
+    {
+      title: '内容',
+      dataIndex: 'reciContent',
+      key: 'reciContent',
+      render: (content: string) => (
+        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{content}</div>
+      ),
+    },
     {
       title: '时间',
       dataIndex: 'timestamp',
