@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, Button, Input, Select, Space, Modal, Form, message, Popconfirm } from 'antd';
+import { Table, Button, Input, Select, Space, Modal, Form, message, Popconfirm, Tag } from 'antd';
 import { SearchOutlined, SendOutlined, DeleteOutlined } from '@ant-design/icons';
 import { smsService, type SmsContent, type SendSmsCommand } from '../services/sms';
 import dayjs from 'dayjs';
@@ -8,7 +8,7 @@ const Sms = () => {
   const [smsList, setSmsList] = useState<SmsContent[]>([]);
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState('');
-  const [slot, setSlot] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [form] = Form.useForm();
 
@@ -19,7 +19,7 @@ const Sms = () => {
     }
     setLoading(true);
     try {
-      const res = await smsService.query(phone, slot, 50);
+      const res = await smsService.query(phone, 200);
       setSmsList(res.data || []);
     } catch {
       message.error('查询失败');
@@ -45,7 +45,11 @@ const Sms = () => {
       return;
     }
     try {
-      await smsService.delete(phone, slot);
+      // 删除两个 slot 的短信
+      await Promise.all([
+        smsService.deleteSlot(phone, 0),
+        smsService.deleteSlot(phone, 1),
+      ]);
       message.success('删除成功');
       setSmsList([]);
     } catch {
@@ -54,7 +58,21 @@ const Sms = () => {
   };
 
   const columns = [
-    { title: '发送方', dataIndex: 'reciPhone', key: 'reciPhone', width: 140 },
+    {
+      title: '设备',
+      dataIndex: 'phone',
+      key: 'phone',
+      width: 130,
+      render: (p: string, r: SmsContent) => (
+        <span>
+          {p}
+          <Tag color={r.slot === 0 ? 'blue' : 'green'} style={{ marginLeft: 4 }}>
+            SIM{r.slot + 1}
+          </Tag>
+        </span>
+      ),
+    },
+    { title: '发送方', dataIndex: 'reciPhone', key: 'reciPhone', width: 130 },
     { title: '内容', dataIndex: 'reciContent', key: 'reciContent', ellipsis: true },
     {
       title: '时间',
@@ -67,7 +85,7 @@ const Sms = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
         <h2 style={{ margin: 0 }}>短信管理</h2>
         <Button type="primary" icon={<SendOutlined />} onClick={() => setSendModalOpen(true)}>
           发送短信
@@ -81,10 +99,6 @@ const Sms = () => {
           onChange={(e) => setPhone(e.target.value)}
           style={{ width: 160 }}
         />
-        <Select value={slot} onChange={setSlot} style={{ width: 100 }}>
-          <Select.Option value={0}>SIM1</Select.Option>
-          <Select.Option value={1}>SIM2</Select.Option>
-        </Select>
         <Button icon={<SearchOutlined />} onClick={handleSearch}>查询</Button>
         <Popconfirm
           title="确认删除"
@@ -100,10 +114,17 @@ const Sms = () => {
       <Table
         columns={columns}
         dataSource={smsList}
-        rowKey={(r) => `${r.reciPhone}-${r.timestamp}`}
+        rowKey={(r) => `${r.phone}-${r.slot}-${r.reciPhone}-${r.timestamp}`}
         loading={loading}
-        pagination={{ pageSize: 10 }}
-        scroll={{ x: 500 }}
+        pagination={{
+          pageSize,
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          onShowSizeChange: (_, size) => setPageSize(size),
+          showTotal: (total) => `共 ${total} 条`,
+        }}
+        scroll={{ x: 600 }}
+        size="middle"
       />
 
       <Modal

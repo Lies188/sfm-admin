@@ -3,6 +3,7 @@ import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './components/MainLayout';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 import Devices from './pages/Devices';
 import Sms from './pages/Sms';
 
@@ -18,7 +19,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-            <Route index element={<Navigate to="/devices" />} />
+            <Route index element={<Navigate to="/dashboard" />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="devices" element={<Devices />} />
             <Route path="sms" element={<Sms />} />
           </Route>

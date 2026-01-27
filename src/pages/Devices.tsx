@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag, Button, message } from 'antd';
+import { Table, Tag, Button, message, Space } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import { deviceService, type DeviceStatus } from '../services/device';
+import { deviceService, type DeviceStatus, type SlotInfo } from '../services/device';
 import dayjs from 'dayjs';
 
 const Devices = () => {
@@ -35,6 +35,27 @@ const Devices = () => {
       ),
     },
     {
+      title: 'SIM卡槽',
+      dataIndex: 'slots',
+      key: 'slots',
+      render: (slots: SlotInfo[] | undefined) => {
+        if (!slots || slots.length === 0) return '-';
+        return (
+          <Space direction="vertical" size={2}>
+            {slots.map((s) => (
+              <span key={s.slot}>
+                <Tag color={s.phone ? 'blue' : 'default'}>
+                  SIM{s.slot + 1}
+                </Tag>
+                {s.phone || '无卡'}
+                {s.carrier && <span style={{ color: '#999', marginLeft: 4 }}>({s.carrier})</span>}
+              </span>
+            ))}
+          </Space>
+        );
+      },
+    },
+    {
       title: '最后活跃',
       dataIndex: 'lastSeen',
       key: 'lastSeen',
@@ -54,6 +75,8 @@ const Devices = () => {
         rowKey="phone"
         loading={loading}
         pagination={false}
+        scroll={{ x: 480 }}
+        size="middle"
       />
     </div>
   );

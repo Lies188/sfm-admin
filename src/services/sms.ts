@@ -17,8 +17,9 @@ export interface SendSmsCommand {
 }
 
 export const smsService = {
-  query: (phone: string, slot: number, limit = 10) =>
-    api.post<any, { count: number; data: SmsContent[] }>('/sms/query', { phone, slot, limit }),
+  query: (phone: string, limit = 20) =>
+    api.post<any, { count: number; data: SmsContent[] }>('/sms/query', { phone, limit }),
   send: (cmd: SendSmsCommand) => api.post('/sms/send', cmd),
-  delete: (phone: string, slot: number) => api.post('/sms/delete', { phone, slot }),
+  delete: (phone: string) => api.post('/sms/delete', { phone, slot: 0 }),
+  deleteSlot: (phone: string, slot: number) => api.post('/sms/delete', { phone, slot }),
 };
