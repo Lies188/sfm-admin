@@ -41,7 +41,7 @@ const Devices = () => {
     setSmsModalOpen(true);
     setSmsLoading(true);
     try {
-      const res = await smsService.query(phone, 100);
+      const res = await smsService.query(phone, 10);
       setSmsList(res.data || []);
     } catch {
       message.error('获取短信失败');
