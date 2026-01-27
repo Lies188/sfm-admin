@@ -44,11 +44,15 @@ const Devices = () => {
           <Space direction="vertical" size={2}>
             {slots.map((s) => (
               <span key={s.slot}>
-                <Tag color={s.phone ? 'blue' : 'default'}>
+                <Tag color={s.subId >= 0 ? 'blue' : 'default'}>
                   SIM{s.slot + 1}
                 </Tag>
-                {s.phone || '无卡'}
-                {s.carrier && <span style={{ color: '#999', marginLeft: 4 }}>({s.carrier})</span>}
+                {s.subId >= 0 ? (
+                  <>
+                    {s.carrier || '未知运营商'}
+                    <span style={{ color: '#999', marginLeft: 4 }}>(ID:{s.subId})</span>
+                  </>
+                ) : '无卡'}
               </span>
             ))}
           </Space>

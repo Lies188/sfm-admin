@@ -2,6 +2,7 @@ import api from './api';
 
 export interface SlotInfo {
   slot: number;
+  subId: number;
   phone: string;
   carrier: string;
 }
