@@ -4,11 +4,14 @@ import { SearchOutlined, SendOutlined, DeleteOutlined } from '@ant-design/icons'
 import { smsService, type SmsContent, type SendSmsCommand } from '../services/sms';
 import dayjs from 'dayjs';
 
+type SmsRow = SmsContent & { key: string };
+
 const Sms = () => {
-  const [smsList, setSmsList] = useState<SmsContent[]>([]);
+  const [smsList, setSmsList] = useState<SmsRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState('');
   const [pageSize, setPageSize] = useState(20);
+  const [current, setCurrent] = useState(1);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [form] = Form.useForm();
 
@@ -18,9 +21,15 @@ const Sms = () => {
       return;
     }
     setLoading(true);
+    setCurrent(1);
     try {
       const res = await smsService.query(phone, 200);
-      setSmsList(res.data || []);
+      setSmsList(
+        (res.data || []).map((item, index) => ({
+          ...item,
+          key: `${item.phone}-${item.slot}-${item.reciPhone}-${item.timestamp}-${index}`,
+        })),
+      );
     } catch {
       message.error('查询失败');
     } finally {
@@ -52,6 +61,7 @@ const Sms = () => {
       ]);
       message.success('删除成功');
       setSmsList([]);
+      setCurrent(1);
     } catch {
       message.error('删除失败');
     }
@@ -121,13 +131,21 @@ const Sms = () => {
       <Table
         columns={columns}
         dataSource={smsList}
-        rowKey={(r) => `${r.phone}-${r.slot}-${r.reciPhone}-${r.timestamp}`}
+        rowKey="key"
         loading={loading}
         pagination={{
+          current,
           pageSize,
           showSizeChanger: true,
           pageSizeOptions: ['10', '20', '50', '100'],
-          onShowSizeChange: (_, size) => setPageSize(size),
+          onChange: (page, size) => {
+            if (size !== pageSize) {
+              setPageSize(size);
+              setCurrent(1);
+              return;
+            }
+            setCurrent(page);
+          },
           showTotal: (total) => `共 ${total} 条`,
         }}
         scroll={{ x: 600 }}
