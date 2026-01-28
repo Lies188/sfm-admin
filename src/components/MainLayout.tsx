@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Drawer, Button } from 'antd';
-import { MobileOutlined, MessageOutlined, LogoutOutlined, MenuOutlined, DashboardOutlined } from '@ant-design/icons';
+import { MobileOutlined, MessageOutlined, LogoutOutlined, MenuOutlined, DashboardOutlined, CloudUploadOutlined } from '@ant-design/icons';
 import { authService } from '../services/auth';
 
 const { Header, Sider, Content } = Layout;
@@ -29,6 +29,7 @@ const MainLayout = () => {
     { key: '/dashboard', icon: <DashboardOutlined />, label: '数据概览' },
     { key: '/devices', icon: <MobileOutlined />, label: '设备管理' },
     { key: '/sms', icon: <MessageOutlined />, label: '短信管理' },
+    { key: '/app-version', icon: <CloudUploadOutlined />, label: 'App 版本' },
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
   ];
 
